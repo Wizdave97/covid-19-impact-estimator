@@ -3,12 +3,6 @@
 function floor(v) {
   return (v >= 0 || -1) * Math.floor(Math.abs(v));
 }
-
-function toOneDP(num) {
-  const flooredNum = floor(num);
-  const diff = Math.round(Math.abs(num) - Math.abs(flooredNum));
-  return (num >= 0 || -1) * (Math.abs(flooredNum) + diff);
-}
 const computeCurrentlyInfected = (reportedCases, multiplier) => (
   reportedCases * multiplier
 );
@@ -28,17 +22,15 @@ const computeInfectionsByRequestedTime = (currentlyInfected, duration, periodTyp
   return infectionsByRequestedTime;
 };
 const computeDollarsInFlight = (infectionsByRequestedTime, data) => {
-  let dollarsInFlight;
+  let days;
   if (data.periodType.toLowerCase() === 'days') {
-    // eslint-disable-next-line max-len
-    dollarsInFlight = infectionsByRequestedTime * data.region.avgDailyIncomePopulation * data.region.avgDailyIncomeInUSD * data.timeToElapse;
+    days = data.timeToElapse;
   } else if (data.periodType.toLowerCase() === 'months') {
-    const days = data.timeToElapse * 30;
-    dollarsInFlight = infectionsByRequestedTime * data.region.avgDailyIncomeInUSD * days * data.region.avgDailyIncomePopulation;
+    days = data.timeToElapse * 30;
   } else if (data.periodType.toLowerCase() === 'weeks') {
-    const days = data.timeToElapse * 7;
-    dollarsInFlight = infectionsByRequestedTime * data.region.avgDailyIncomePopulation * data.region.avgDailyIncomeInUSD * days;
+    days = data.timeToElapse * 7;
   }
+  const dollarsInFlight = (infectionsByRequestedTime * data.region.avgDailyIncomePopulation * data.region.avgDailyIncomeInUSD) / days;
   return dollarsInFlight;
 };
 const computeSevereCasesByRequestedTime = (infectionsByRequestedTime) => (
@@ -86,9 +78,9 @@ const covid19ImpactEstimator = (data) => {
   severeImpact.casesForVentilatorsByRequestedTime = floor(percentInfectionsByTime(
     infectionsByRequestedTimeS, 2
   ));
-  impact.dollarsInFlight = toOneDP(computeDollarsInFlight(infectionsByRequestedTimeI, data));
+  impact.dollarsInFlight = floor(computeDollarsInFlight(infectionsByRequestedTimeI, data));
 
-  severeImpact.dollarsInFlight = toOneDP(computeDollarsInFlight(infectionsByRequestedTimeS, data));
+  severeImpact.dollarsInFlight = floor(computeDollarsInFlight(infectionsByRequestedTimeS, data));
   return {
     data: { ...data },
     impact: { ...impact },
